@@ -1,4 +1,4 @@
-#include "MatlabGeometry.h"
+#include "../MatlabGeometry.h"
 
 const string MatlabGeometry::TYPE_POINTS = "POINTS";
 const string MatlabGeometry::TYPE_TRIANGLES = "TRIANGLES";

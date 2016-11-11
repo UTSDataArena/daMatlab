@@ -3,12 +3,12 @@ if(TARGET cyclops)
 	include_directories(${OSG_INCLUDES})
 	
 	add_library(templateModule MODULE 
-	templateModule.cpp
-	Connection.cpp
-	Thread.cpp
-	MatlabGeometry.cpp
-	DataReader.cpp
-	GeometryQueue.cpp
+	src/templateModule.cpp
+	src/Connection.cpp
+	src/Thread.cpp
+	src/MatlabGeometry.cpp
+	src/DataReader.cpp
+	src/GeometryQueue.cpp
 	)
 	
 

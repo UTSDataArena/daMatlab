@@ -1,4 +1,4 @@
-#include "Connection.h"
+#include "../Connection.h"
 
 Connection::Connection(){
     m_port = 30000;
