@@ -1,4 +1,4 @@
-#include "DataReader.h"
+#include "../DataReader.h"
 
 const string DataReader::H_MODEL_NAME = "H_MODEL_NAME";
 

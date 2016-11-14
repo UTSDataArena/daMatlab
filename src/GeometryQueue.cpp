@@ -1,4 +1,4 @@
-#include "GeometryQueue.h"
+#include "../GeometryQueue.h"
 
 const unsigned int GeometryQueue::SIZE = 128;
 
