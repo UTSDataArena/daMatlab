@@ -17,7 +17,7 @@ const string DataReader::D_FACE = "D_FACE";
 const string DataReader::D_COLOR = "D_COLOR";
 
 const string DataReader::H_CLEAR = "H_CLEAR";
-const string DataReader::H_CREATE = "H_CREATE";
+const string DataReader::H_NEXT = "H_NEXT";
 const string DataReader::H_ADD = "H_ADD";
 
 
@@ -155,13 +155,13 @@ void DataReader::readHeader(const string & data, unsigned int & count){
                     std::cout << "DataReader: Added geometry " << m_queue->back()->getName() << " to queue" << std::endl;
                     m_create =true;
                 } else {
-                    std::cout << "DataReader: Geometry queue reached max size -- Please remove geometry from queue and send F_ADD again" << std::endl;
+                    std::cout << "DataReader: Geometry queue reached max size -- Please remove geometry from queue and ADD again" << std::endl;
                 }
             }
             
-        } else if(!H_CREATE.compare(flag)){
+        } else if(!H_NEXT.compare(flag)){
             
-            if(!m_matlabGeometry->checkAndCreate()){ //geometry is invalid
+            if(!m_matlabGeometry->checkAndAdd()){ //geometry is invalid
                 std::cout << "DataReader: Geometry is invalid -- Please create new geometry" << std::endl; 
                 m_matlabGeometry->clear();
             }

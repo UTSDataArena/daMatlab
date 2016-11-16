@@ -3,6 +3,10 @@
 const string MatlabGeometry::TYPE_POINTS = "POINTS";
 const string MatlabGeometry::TYPE_TRIANGLES = "TRIANGLES";
 
+MatlabGeometry::RECV operator|(MatlabGeometry::RECV a, MatlabGeometry::RECV b) {
+    return MatlabGeometry::RECV(static_cast<int>(a)|static_cast<int>(b));
+}
+
 
 MatlabGeometry * MatlabGeometry::create(const omicron::String & name){
     return new MatlabGeometry(name);
@@ -13,8 +17,9 @@ MatlabGeometry::MatlabGeometry(const omicron::String& name): cyclops::ModelGeome
     m_vertices = new osg::Vec3Array();
     m_faces = new osg::Vec3iArray();
     m_vertexNormals = new osg::Vec3Array();
-    myVertexNormals = new osg::Vec3Array();
+    m_color = new osg::Vec4Array();
     myFaceNormals = new osg::Vec3Array();
+    myVertexNormals = new osg::Vec3Array();
     myColors = new osg::Vec4Array();
     
     myGeometry->setNormalArray(myFaceNormals, osg::Array::BIND_PER_VERTEX);
@@ -24,8 +29,7 @@ MatlabGeometry::MatlabGeometry(const omicron::String& name): cyclops::ModelGeome
     m_startIdx = 0;
     m_numVertices = 0;
     
-    m_recvVertices =false;
-    m_recvVertexNormals =false;
+    m_recv = RECV_DEF;
     
     m_campos = omicron::Vector3f(0, 0, 0);
     m_camup = omicron::Vector3f(0, 0, 1);
@@ -40,7 +44,7 @@ void MatlabGeometry::addVertex(const float vertex[3]){
     }
 }
 
-void MatlabGeometry::addFace(const float face[3]){
+void MatlabGeometry::addFace(const float face[3]){   
     
     // matlab indices from 1 to n
     m_faces->push_back(osg::Vec3i(static_cast<int>(face[0]-1), static_cast<int>(face[1]-1), static_cast<int>(face[2]-1)));
@@ -50,7 +54,7 @@ void MatlabGeometry::addFace(const float face[3]){
         myVertices->push_back(m_vertices->at(face[0]-1));
         myVertices->push_back(m_vertices->at(face[1]-1));
         myVertices->push_back(m_vertices->at(face[2]-1));
-        m_recvVertices = true;
+        m_recv = m_recv | RECV_VERTS;        
     }
     
     // if we have already received the vertex normals, we can calculate the face vertex normals and add them to the geode
@@ -58,8 +62,18 @@ void MatlabGeometry::addFace(const float face[3]){
         myVertexNormals->push_back(m_vertexNormals->at(face[0]-1));
         myVertexNormals->push_back(m_vertexNormals->at(face[1]-1));
         myVertexNormals->push_back(m_vertexNormals->at(face[2]-1));
-        m_recvVertexNormals = true;
+        m_recv = m_recv | RECV_VERTS_NORM;
     }
+    
+    // if we have already received color
+    if(m_color->size()>0){        
+        myColors->push_back(m_color->at(face[0]-1));
+        myColors->push_back(m_color->at(face[1]-1));
+        myColors->push_back(m_color->at(face[2]-1));
+        m_recv = m_recv |RECV_COLOR;
+    }
+    
+    
 }
 
 void MatlabGeometry::addVertexNormal(const float vertexNormal[3]){    
@@ -79,7 +93,12 @@ void MatlabGeometry::addFaceNormal(const float faceNormal[3]){
 }
 
 void MatlabGeometry::addColor(const float color[4]){
-    myColors->push_back(osg::Vec4f(color[0], color[1], color[2], color[3]));
+    
+    if(osg::PrimitiveSet::POINTS == m_type){   
+        myColors->push_back(osg::Vec4f(color[0], color[1], color[2], color[3]));
+    } else if ( osg::PrimitiveSet::TRIANGLES == m_type){
+        m_color->push_back(osg::Vec4f(color[0], color[1], color[2], color[3]));
+    }
 }
 
 void MatlabGeometry::setPrimitiveType(const std::string & type){     
@@ -98,33 +117,26 @@ void MatlabGeometry::setUpVector(const float upVector[3]){
     m_camup = omicron::Vector3f( upVector[0], upVector[1], upVector[2] );
 }
 
-bool MatlabGeometry::checkAndCreate() {
+void MatlabGeometry:: calculateValues(){ 
     
-    if (osg::PrimitiveSet::TRIANGLES == m_type){
+    if(m_faces->size()>0){
         
-        if(m_faces->size()==0 || m_vertices->size()==0){
-            std::cerr << "MatlabGeometry: TRIANGLES must have faces and vertices" << std::endl;
-            return false;   
-        }
-        
-        if(!m_recvVertices){
-            for(int i = 0; i < m_faces->size() ; i++){
-                osg::Vec3i v = m_faces->at(i);   
-                myVertices->push_back(m_vertices->at(v[0]));
-                myVertices->push_back(m_vertices->at(v[1]));
-                myVertices->push_back(m_vertices->at(v[2]));
-            }
+        if(m_vertices->size()>0){
             
+            if(!(m_recv & RECV_VERTS)){
+                
+                for(int i = 0; i < m_faces->size() ; i++){
+                    osg::Vec3i v = m_faces->at(i);   
+                    myVertices->push_back(m_vertices->at(v[0]));
+                    myVertices->push_back(m_vertices->at(v[1]));
+                    myVertices->push_back(m_vertices->at(v[2]));
+                }
+            }
         }
         
         if(m_vertexNormals->size()>0){
             
-            if(m_vertexNormals->size() != m_vertices->size()){
-                std::cerr << "MatlabGeometry: Vertex normals must have same size as vertices" << std::endl;
-                return false;
-            }
-            
-            if(!m_recvVertexNormals){
+            if(!(m_recv & RECV_VERTS_NORM)){
                 for(int i = 0; i < m_faces->size(); i++){
                     osg::Vec3i v = m_faces->at(i);   
                     myVertexNormals->push_back(m_vertexNormals->at(v[0]));
@@ -133,7 +145,47 @@ bool MatlabGeometry::checkAndCreate() {
                 }
             }
         }
-    }    
+        
+        if(m_color->size() > 0){
+            
+            if(!(m_recv & RECV_COLOR)){
+                for(int i = 0; i < m_faces->size(); i++){
+                    osg::Vec3i v = m_faces->at(i);   
+                    myColors->push_back(m_color->at(v[0]));
+                    myColors->push_back(m_color->at(v[1]));
+                    myColors->push_back(m_color->at(v[2]));
+                }
+            }
+        }
+        
+    }
+    
+}
+
+
+bool MatlabGeometry::checkAndAdd() {
+    
+    calculateValues();
+    
+    if(myVertices->size() == 0) return false;
+    
+    if (myFaceNormals->size()>0){
+        if(myFaceNormals->size() != myVertices->size()){
+            return false;
+        }
+    }
+    
+    if (myVertexNormals->size()>0){
+        if(myVertexNormals->size() != myVertices->size()){
+            return false;
+        }
+    }
+    
+    if(myColors->size()>0){
+        if(myColors->size() != myVertices->size()){
+            return false;
+        }
+    }
     
     m_numVertices = myVertices->size() - m_startIdx; 
     myGeometry->addPrimitiveSet(new osg::DrawArrays(m_type, m_startIdx, m_numVertices));
@@ -143,49 +195,12 @@ bool MatlabGeometry::checkAndCreate() {
     
     m_faces->clear();   
     m_vertices->clear();
-    m_vertexNormals->clear();    
+    m_vertexNormals->clear();  
+    m_color->clear();
     
-    m_recvVertices =false;
-    m_recvVertexNormals =false;
+    m_recv = RECV_DEF;
     
     return true;
-    
-}
-
-
-
-bool MatlabGeometry::checkAndAdd() {
-    
-    if (myFaceNormals->size()>0){
-        if(myFaceNormals->size() != myVertices->size()){
-            std::cerr << "MatlabGeometry: Face normals must have same size as vertices" << std::endl;
-            return false;
-        }
-    }
-    
-    if (myVertexNormals->size()>0){
-        if(myVertexNormals->size() != myVertices->size()){
-            std::cerr << "MatlabGeometry: Vertex normals must have same size as vertices" << std::endl;
-            return false;
-        }
-    }
-    
-    if(myColors->size()>0){
-        if(myColors->size() != myVertices->size()){
-            std::cerr << "MatlabGeometry: Colors must have same size as vertices" << std::endl;
-            return false;
-        }
-    }
-    
-    
-    
-    m_numVertices = myVertices->size() - m_startIdx; 
-    myGeometry->addPrimitiveSet(new osg::DrawArrays(m_type, m_startIdx, m_numVertices));
-    m_startIdx = m_numVertices;
-    
-    myGeometry->dirtyBound();
-    
-    return true;  
 }
 
 
@@ -201,6 +216,7 @@ void MatlabGeometry::clear() {
     
     myVertices->clear();
     myColors->clear();
+    m_color->clear();
     m_faces->clear();
     m_vertices->clear();
     m_vertexNormals->clear();
@@ -210,8 +226,7 @@ void MatlabGeometry::clear() {
     myGeometry->removePrimitiveSet(0, myGeometry->getNumPrimitiveSets());
     myGeometry->dirtyBound();
     
-    m_recvVertices =false;
-    m_recvVertexNormals =false;
+    m_recv = RECV_DEF;
     
     m_startIdx = 0;
     m_numVertices = 0;

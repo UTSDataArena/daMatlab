@@ -35,7 +35,7 @@ private:
     static const string D_FACE;   
     static const string D_COLOR;
     
-    static const string H_CREATE; 
+    static const string H_NEXT; 
     static const string H_CLEAR; 
     static const string H_ADD; 
     

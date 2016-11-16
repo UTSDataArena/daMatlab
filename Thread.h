@@ -15,7 +15,7 @@ namespace mThread {
         bool cancel();
         
     protected:
-        virtual void run();
+        virtual void run() = 0;
         
     private:
         static void * callRun(void * This);

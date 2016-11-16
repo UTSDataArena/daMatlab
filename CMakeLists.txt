@@ -1,9 +1,9 @@
-# templateModule depends on cyclops
+# daMatlab depends on cyclops
 if(TARGET cyclops)
 	include_directories(${OSG_INCLUDES})
 	
-	add_library(templateModule MODULE 
-	src/templateModule.cpp
+	add_library(daMatlab MODULE 
+	src/MatlabModule.cpp
 	src/Connection.cpp
 	src/Thread.cpp
 	src/MatlabGeometry.cpp
@@ -14,11 +14,11 @@ if(TARGET cyclops)
 
 
 	# Set the module library dependencies here
-	target_link_libraries(templateModule
+	target_link_libraries(daMatlab
 		omega 
 		omegaToolkit 
 		cyclops
 		)
 
-	declare_native_module(templateModule)
+	declare_native_module(daMatlab)
 endif()

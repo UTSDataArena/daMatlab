@@ -29,7 +29,7 @@ public:
     omicron::Vector3f getUpVector() const;
     
     void clear();
-    bool checkAndCreate();  
+    
     bool checkAndAdd();
     
     
@@ -48,19 +48,25 @@ private:
     /* face list for triangles */
     omega::Ref<osg::Vec3iArray> m_faces;
     
+    omega::Ref<osg::Vec4Array> m_color;
+    
     /* Face normal list added to the geode */
     omega::Ref<osg::Vec3Array> myFaceNormals;
     /* Vertex normal list added to the geode */
     omega::Ref<osg::Vec3Array> myVertexNormals;
     
-    osg::PrimitiveSet::Mode m_type;    
+    osg::PrimitiveSet::Mode m_type;
     
-    bool m_recvVertices;
-    bool m_recvVertexNormals;
+    enum RECV {RECV_DEF = 0x00, RECV_VERTS = 0x01, RECV_VERTS_NORM = 0x02, RECV_COLOR = 0x04} m_recv;
+    friend MatlabGeometry::RECV operator|(MatlabGeometry::RECV a, MatlabGeometry::RECV b);
+    
+    void calculateValues();  
     
     int m_numVertices;
     int m_startIdx;
     
 };
+
+
 
 #endif

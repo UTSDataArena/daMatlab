@@ -1,4 +1,4 @@
-#include "../templateModule.h"
+#include "../MatlabModule.h"
 
 
 MatlabModule::~MatlabModule() {

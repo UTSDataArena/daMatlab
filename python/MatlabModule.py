@@ -1,5 +1,5 @@
 from cyclops import *
-from templateModule import *
+from daMatlab import *
 import spin_navigation
 
 
@@ -13,6 +13,15 @@ program = ProgramAsset()
 program.name = "MatlabModule"
 scene.addProgram(program)
 ################################
+
+
+
+lightColor = Color("#ff5555")
+light = Light.create()
+light.setColor(lightColor)
+light.setAmbient(Color("#200000"))
+light.setEnabled(True)
+
 
 
 ###### POINT CLOUD ###############
@@ -48,5 +57,3 @@ def onUpdate(frame, t, dt):
     
 ## register the update function
 setUpdateFunction(onUpdate)
-    
-    

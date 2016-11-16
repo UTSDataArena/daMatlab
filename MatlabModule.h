@@ -46,7 +46,7 @@ private:
 //Python wrapper code.
 #ifdef OMEGA_USE_PYTHON
 #include "omega/PythonInterpreterWrapper.h"
-BOOST_PYTHON_MODULE(templateModule)
+BOOST_PYTHON_MODULE(daMatlab)
 {
     // SceneLoader
     PYAPI_REF_BASE_CLASS(MatlabModule)
