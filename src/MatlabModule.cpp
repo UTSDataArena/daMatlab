@@ -1,11 +1,8 @@
 #include "../MatlabModule.h"
 
-
 MatlabModule::~MatlabModule() {
-    pthread_mutex_unlock(&m_mutex);
-    m_reader.join();
+    stopDataReader();
     pthread_mutex_destroy(&m_mutex);
-    cout << "MatlabModule: DataReader stopped " << endl;
 }
 
 MatlabModule* MatlabModule::createAndInitialize() {
@@ -19,7 +16,7 @@ MatlabModule::MatlabModule(): omega::EngineModule("MatlabModule"), m_sceneManage
 }
 
 
-void MatlabModule::printAllNodes(const omega::Node * node) {
+void MatlabModule::printSceneNodes(const omega::Node * node) {
     if(node == NULL){
         return;
     }
@@ -27,7 +24,7 @@ void MatlabModule::printAllNodes(const omega::Node * node) {
     for (std::list<omega::Node*>::iterator it=children.begin(); it != children.end(); ++it){
         std::cout << "MatlabModule: Node " << node->getName() << " has " << node->numChildren() << " child(ren)" << std::endl; 
         std::cout << "MatlabModule: Node's child: " << (*it)->getName() << std::endl;
-        printAllNodes(*it);
+        printSceneNodes(*it);
     }
 }
 
@@ -47,15 +44,19 @@ cyclops::SceneManager * MatlabModule::getSceneManager() const {
     return m_sceneManager.get();
 }
 
+void MatlabModule::stopDataReader(){
+    
+    if(!m_readerIsFin){
+        pthread_mutex_unlock(&m_mutex);
+        m_reader.join();
+        std::cout << "MatlabModule: DataReader stopped " << std::endl;
+        m_readerIsFin = true;
+    }
+}
+
 void MatlabModule::addNewGeometry() {
     
     static unsigned int round = 0; 
-    
-    //     if (m_round == 0){
-    //         m_programAsset = new cyclops::ProgramAsset();
-    //         m_programAsset->name = "MatlabModule";    
-    //         m_sceneManager->ShaderManager::addProgram(m_programAsset);           
-    //     }
     
     if( !m_queue.isEmpty()) {
         
@@ -77,25 +78,26 @@ void MatlabModule::addNewGeometry() {
         camera->setPosition(m_matlabGeometry->getCameraPos());
         camera->lookAt(m_staticObject->getBoundCenter(), m_matlabGeometry->getUpVector());   
         
-        printAllNodes(omega::Engine::instance()->getScene());
+        printSceneNodes(omega::Engine::instance()->getScene());
         std::cout << "-------------------------- MatlabModule: Done " << round << " --------------------------" << std::endl;
         round++;
     }
 }
 
 void MatlabModule::initialize() {
-    pthread_mutex_init(&m_mutex, NULL);
-    pthread_mutex_lock(&m_mutex);
-    m_sceneManager = cyclops::SceneManager::createAndInitialize();
     
+    m_port = 30000;
+    m_ip_address = "127.0.0.1";
+    
+    m_sceneManager = cyclops::SceneManager::createAndInitialize();
     m_queue = GeometryQueue();
     
-    // create Reader
-    m_reader = DataReader(&m_queue, &m_mutex);
-    //start reader thread
+    // create DataReader thread
+    pthread_mutex_init(&m_mutex, NULL);
+    pthread_mutex_lock(&m_mutex);
+    m_reader = DataReader(m_port, m_ip_address, &m_queue, &m_mutex);
+    m_readerIsFin = false;
     m_reader.start();
-    
-    //addNewGeometry();
 }
 
 

@@ -31,12 +31,12 @@ MatlabGeometry::MatlabGeometry(const omicron::String& name): cyclops::ModelGeome
     
     m_recv = RECV_DEF;
     
-    m_campos = omicron::Vector3f(0, 0, 0);
-    m_camup = omicron::Vector3f(0, 0, 1);
+    m_camPos = omicron::Vector3f(0, 0, 0);
+    m_camUp = omicron::Vector3f(0, 0, 1);
     
 }
 
-void MatlabGeometry::addVertex(const float vertex[3]){
+void MatlabGeometry::setVertex(const float vertex[3]){
     if(osg::PrimitiveSet::POINTS == m_type){   
         myVertices->push_back(osg::Vec3f(vertex[0], vertex[1], vertex[2]));
     } else if ( osg::PrimitiveSet::TRIANGLES == m_type){
@@ -44,7 +44,7 @@ void MatlabGeometry::addVertex(const float vertex[3]){
     }
 }
 
-void MatlabGeometry::addFace(const float face[3]){   
+void MatlabGeometry::setFace(const float face[3]){   
     
     // matlab indices from 1 to n
     m_faces->push_back(osg::Vec3i(static_cast<int>(face[0]-1), static_cast<int>(face[1]-1), static_cast<int>(face[2]-1)));
@@ -72,11 +72,9 @@ void MatlabGeometry::addFace(const float face[3]){
         myColors->push_back(m_color->at(face[2]-1));
         m_recv = m_recv |RECV_COLOR;
     }
-    
-    
 }
 
-void MatlabGeometry::addVertexNormal(const float vertexNormal[3]){    
+void MatlabGeometry::setVertexNormal(const float vertexNormal[3]){    
     
     if (osg::PrimitiveSet::POINTS == m_type){
         myVertexNormals->push_back(osg::Vec3f(vertexNormal[0] , vertexNormal[1], vertexNormal[2]));
@@ -85,14 +83,14 @@ void MatlabGeometry::addVertexNormal(const float vertexNormal[3]){
     } 
 }
 
-void MatlabGeometry::addFaceNormal(const float faceNormal[3]){
+void MatlabGeometry::setFaceNormal(const float faceNormal[3]){
     // for each face vertex we have to push the face normal
     myFaceNormals->push_back(osg::Vec3f(faceNormal[0], faceNormal[1], faceNormal[2]));
     myFaceNormals->push_back(osg::Vec3f(faceNormal[0], faceNormal[1], faceNormal[2]));
     myFaceNormals->push_back(osg::Vec3f(faceNormal[0], faceNormal[1], faceNormal[2]));
 }
 
-void MatlabGeometry::addColor(const float color[4]){
+void MatlabGeometry::setColor(const float color[4]){
     
     if(osg::PrimitiveSet::POINTS == m_type){   
         myColors->push_back(osg::Vec4f(color[0], color[1], color[2], color[3]));
@@ -110,14 +108,14 @@ void MatlabGeometry::setPrimitiveType(const std::string & type){
 }
 
 void MatlabGeometry::setCameraPos(const float cameraPos[3]){
-    m_campos = omicron::Vector3f( cameraPos[0], cameraPos[1], cameraPos[2] );
+    m_camPos = omicron::Vector3f( cameraPos[0], cameraPos[1], cameraPos[2] );
 }
 
 void MatlabGeometry::setUpVector(const float upVector[3]){
-    m_camup = omicron::Vector3f( upVector[0], upVector[1], upVector[2] );
+    m_camUp = omicron::Vector3f( upVector[0], upVector[1], upVector[2] );
 }
 
-void MatlabGeometry:: calculateValues(){ 
+void MatlabGeometry::addValuesToGeode(){ 
     
     if(m_faces->size()>0){
         
@@ -163,9 +161,9 @@ void MatlabGeometry:: calculateValues(){
 }
 
 
-bool MatlabGeometry::checkAndAdd() {
+bool MatlabGeometry::validate() {
     
-    calculateValues();
+    addValuesToGeode();
     
     if(myVertices->size() == 0) return false;
     
@@ -187,6 +185,13 @@ bool MatlabGeometry::checkAndAdd() {
         }
     }
     
+    return true;
+    
+}
+
+
+void MatlabGeometry::addPrimitive() {
+    
     m_numVertices = myVertices->size() - m_startIdx; 
     myGeometry->addPrimitiveSet(new osg::DrawArrays(m_type, m_startIdx, m_numVertices));
     m_startIdx = m_numVertices;
@@ -199,23 +204,23 @@ bool MatlabGeometry::checkAndAdd() {
     m_color->clear();
     
     m_recv = RECV_DEF;
-    
-    return true;
 }
 
 
 omicron::Vector3f MatlabGeometry::getCameraPos() const{
-    return m_campos;
+    return m_camPos;
 }
 
 omicron::Vector3f MatlabGeometry::getUpVector() const{
-    return m_camup;
+    return m_camUp;
 }
 
 void MatlabGeometry::clear() {
     
     myVertices->clear();
     myColors->clear();
+    
+    
     m_color->clear();
     m_faces->clear();
     m_vertices->clear();
@@ -231,8 +236,8 @@ void MatlabGeometry::clear() {
     m_startIdx = 0;
     m_numVertices = 0;
     
-    m_campos = omicron::Vector3f(0, 0, 0);
-    m_camup = omicron::Vector3f(0, 0, 1);
+    m_camPos = omicron::Vector3f(0, 0, 0);
+    m_camUp = omicron::Vector3f(0, 0, 1);
 }
 
 

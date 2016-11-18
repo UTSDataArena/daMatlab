@@ -18,7 +18,7 @@ bool mThread::Thread::cancel(){
 
 void mThread::Thread::run(){};
 
-void * mThread::Thread::callRun(void * This) {
-    ((Thread *)This)->run();
+void * mThread::Thread::callRun(void * this_ptr) {
+    static_cast<Thread*>(this_ptr)->run();    
     return NULL;
 }

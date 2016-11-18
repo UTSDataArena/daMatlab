@@ -4,22 +4,18 @@
 #include <cyclops/cyclops.h>
 #include <omega.h>
 
-class MatlabGeometry : public cyclops::ModelGeometry
-{
+class MatlabGeometry : public cyclops::ModelGeometry {
     
 public:
     
     static MatlabGeometry * create(const omicron::String & name);
     MatlabGeometry(const omicron::String & name);
     
-    void addVertex(const float vertex[3]);
-    void addFace(const float face[3]);
-    
-    void addVertexNormal(const float vertexNormal[3]);
-    void addFaceNormal(const float faceNormal[3]);
-    
-    void addColor(const float color[4]);
-    
+    void setVertex(const float vertex[3]);
+    void setFace(const float face[3]);
+    void setVertexNormal(const float vertexNormal[3]);
+    void setFaceNormal(const float faceNormal[3]);
+    void setColor(const float color[4]);
     void setPrimitiveType(const std::string & type);
     
     void setCameraPos(const float cameraPos[3]);
@@ -29,8 +25,9 @@ public:
     omicron::Vector3f getUpVector() const;
     
     void clear();
+    bool validate();
+    void addPrimitive();
     
-    bool checkAndAdd();
     
     
 private:
@@ -38,8 +35,8 @@ private:
     static const string TYPE_POINTS;
     static const string TYPE_TRIANGLES;
     
-    omicron::Vector3f m_campos;
-    omicron::Vector3f m_camup;
+    omicron::Vector3f m_camPos;
+    omicron::Vector3f m_camUp;
     
     /* vertex list for triangles */
     omega::Ref<osg::Vec3Array> m_vertices;
@@ -57,13 +54,14 @@ private:
     
     osg::PrimitiveSet::Mode m_type;
     
-    enum RECV {RECV_DEF = 0x00, RECV_VERTS = 0x01, RECV_VERTS_NORM = 0x02, RECV_COLOR = 0x04} m_recv;
-    friend MatlabGeometry::RECV operator|(MatlabGeometry::RECV a, MatlabGeometry::RECV b);
-    
-    void calculateValues();  
-    
     int m_numVertices;
     int m_startIdx;
+    
+    enum RECV {RECV_DEF = 0x00, RECV_VERTS = 0x01, RECV_VERTS_NORM = 0x02, RECV_COLOR = 0x04} m_recv;
+    
+    void addValuesToGeode();
+    
+    friend MatlabGeometry::RECV operator|(MatlabGeometry::RECV a, MatlabGeometry::RECV b);
     
 };
 

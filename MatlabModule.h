@@ -24,22 +24,24 @@ public:
     cyclops::StaticObject * getStaticObject() const;
     cyclops::SceneManager * getSceneManager() const;
     void addNewGeometry();
+    void stopDataReader();
     
     
 private:
     
-    void printAllNodes(const omega::Node * node);
-    
     omega::Ref<cyclops::SceneManager> m_sceneManager;
     omega::Ref<cyclops::StaticObject> m_staticObject;
     omega::Ref<MatlabGeometry> m_matlabGeometry;
-//     omega::Ref<cyclops::ProgramAsset> m_programAsset;
     
     GeometryQueue m_queue;
     DataReader m_reader;
-    
     pthread_mutex_t m_mutex;
+    bool m_readerIsFin;
     
+    unsigned int m_port;
+    std::string m_ip_address;
+    
+    void printSceneNodes(const omega::Node * node);
 };
 
 
@@ -48,9 +50,9 @@ private:
 #include "omega/PythonInterpreterWrapper.h"
 BOOST_PYTHON_MODULE(daMatlab)
 {
-    // SceneLoader
     PYAPI_REF_BASE_CLASS(MatlabModule)
     PYAPI_STATIC_REF_GETTER(MatlabModule, createAndInitialize)
+    PYAPI_METHOD(MatlabModule, stopDataReader)
     PYAPI_METHOD(MatlabModule, addNewGeometry)
     PYAPI_REF_GETTER(MatlabModule, getCurrentNode)
     PYAPI_REF_GETTER(MatlabModule, getSceneManager)

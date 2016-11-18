@@ -1,13 +1,17 @@
 #include "../Connection.h"
 
-Connection::Connection(){
-    m_port = 30000;
-    m_address = 0x7f000001;
+Connection::Connection(){}
+
+Connection::Connection(const unsigned int port, const std::string & ip_address){
     
     memset((char *)&m_myaddr, 0, sizeof(m_myaddr)); 
+    memset((char *)&m_remaddr, 0, sizeof(m_remaddr));
+    
     m_myaddr.sin_family = AF_INET; 
-    m_myaddr.sin_addr.s_addr = htonl(m_address); 
-    m_myaddr.sin_port = htons(m_port); 
+    if(inet_pton(AF_INET, ip_address.c_str(), &m_myaddr.sin_addr.s_addr) != 1){
+        throw ConnectionException("Connection: IP address is inavlid"); 
+    }
+    m_myaddr.sin_port = htons(port); 
     
     m_timeout.tv_sec = 1;
     m_timeout.tv_usec = 0;
