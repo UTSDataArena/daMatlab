@@ -2,6 +2,10 @@
 #define THREAD_H
 
 #include <pthread.h>
+/*
+ * We are using pthread since C++11 is not available
+ * Based on http://stackoverflow.com/questions/1151582/pthread-function-from-a-class
+ */
 
 namespace mThread {
     
@@ -18,7 +22,7 @@ namespace mThread {
         virtual void run() = 0;
         
     private:
-        static void * callRun(void * This);
+        static void * callRun(void * this_ptr);
         pthread_t m_thread;
     };
 }
