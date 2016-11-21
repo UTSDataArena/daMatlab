@@ -1,12 +1,15 @@
+/******************************************************************************
+ * Based on http://stackoverflow.com/a/1151615 (Jeremy Friesner)
+ *****************************************************************************/
+
 #ifndef THREAD_H
 #define THREAD_H
 
 #include <pthread.h>
+
 /*
  * We are using pthread since C++11 is not available
- * Based on http://stackoverflow.com/questions/1151582/pthread-function-from-a-class
  */
-
 namespace mThread {
     
     class Thread {
@@ -22,7 +25,7 @@ namespace mThread {
         virtual void run() = 0;
         
     private:
-        static void * callRun(void * this_ptr);
+        static void * helper(void * this_ptr);
         pthread_t m_thread;
     };
 }

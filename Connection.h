@@ -24,8 +24,8 @@ public:
     
 private:
 
-    struct sockaddr_in m_myaddr;
-    struct sockaddr_in m_remaddr;
+    struct sockaddr_in m_myAddr;
+    struct sockaddr_in m_theirAddr;
     struct timeval m_timeout;
     int m_fd; 
     

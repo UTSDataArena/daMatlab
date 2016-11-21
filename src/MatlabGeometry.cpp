@@ -2,6 +2,7 @@
 
 const string MatlabGeometry::TYPE_POINTS = "POINTS";
 const string MatlabGeometry::TYPE_TRIANGLES = "TRIANGLES";
+const string MatlabGeometry::TYPE_QUADS = "QUADS";
 
 MatlabGeometry::RECV operator|(MatlabGeometry::RECV a, MatlabGeometry::RECV b) {
     return MatlabGeometry::RECV(static_cast<int>(a)|static_cast<int>(b));
@@ -15,7 +16,8 @@ MatlabGeometry * MatlabGeometry::create(const omicron::String & name){
 MatlabGeometry::MatlabGeometry(const omicron::String& name): cyclops::ModelGeometry(name){ 
     
     m_vertices = new osg::Vec3Array();
-    m_faces = new osg::Vec3iArray();
+    m_3faces = new osg::Vec3iArray();
+    m_4faces = new osg::Vec4iArray();
     m_vertexNormals = new osg::Vec3Array();
     m_color = new osg::Vec4Array();
     myFaceNormals = new osg::Vec3Array();
@@ -39,38 +41,77 @@ MatlabGeometry::MatlabGeometry(const omicron::String& name): cyclops::ModelGeome
 void MatlabGeometry::setVertex(const float vertex[3]){
     if(osg::PrimitiveSet::POINTS == m_type){   
         myVertices->push_back(osg::Vec3f(vertex[0], vertex[1], vertex[2]));
-    } else if ( osg::PrimitiveSet::TRIANGLES == m_type){
+    } else if (osg::PrimitiveSet::TRIANGLES == m_type || osg::PrimitiveSet::QUADS == m_type){
         m_vertices->push_back(osg::Vec3f(vertex[0], vertex[1], vertex[2]));
     }
 }
 
-void MatlabGeometry::setFace(const float face[3]){   
-    
-    // matlab indices from 1 to n
-    m_faces->push_back(osg::Vec3i(static_cast<int>(face[0]-1), static_cast<int>(face[1]-1), static_cast<int>(face[2]-1)));
-    
-    // if we have already received the vertices, we can calculate the face vertices and add them to the geode
-    if(m_vertices->size()>0){
-        myVertices->push_back(m_vertices->at(face[0]-1));
-        myVertices->push_back(m_vertices->at(face[1]-1));
-        myVertices->push_back(m_vertices->at(face[2]-1));
-        m_recv = m_recv | RECV_VERTS;        
-    }
-    
-    // if we have already received the vertex normals, we can calculate the face vertex normals and add them to the geode
-    if(m_vertexNormals->size()>0){            
-        myVertexNormals->push_back(m_vertexNormals->at(face[0]-1));
-        myVertexNormals->push_back(m_vertexNormals->at(face[1]-1));
-        myVertexNormals->push_back(m_vertexNormals->at(face[2]-1));
-        m_recv = m_recv | RECV_VERTS_NORM;
-    }
-    
-    // if we have already received color
-    if(m_color->size()>0){        
-        myColors->push_back(m_color->at(face[0]-1));
-        myColors->push_back(m_color->at(face[1]-1));
-        myColors->push_back(m_color->at(face[2]-1));
-        m_recv = m_recv |RECV_COLOR;
+void MatlabGeometry::setFace(const float face[]){   
+
+    if (osg::PrimitiveSet::QUADS == m_type){
+        
+//         std::cout << "MatlabGeometry: faces " << face[0] << " " << face[1] << " " << face[2] << " " << face[3] << std::endl;
+        
+        m_4faces->push_back(osg::Vec4i(static_cast<int>(face[0]-1), static_cast<int>(face[1]-1), static_cast<int>(face[2]-1), static_cast<int>(face[3]-1)));
+        
+        // if we have already received the vertices, we can calculate the face vertices and add them to the geode
+        if(m_vertices->size()>0){
+            myVertices->push_back(m_vertices->at(face[0]-1));
+            myVertices->push_back(m_vertices->at(face[1]-1));
+            myVertices->push_back(m_vertices->at(face[2]-1));
+            myVertices->push_back(m_vertices->at(face[3]-1));
+            m_recv = m_recv | RECV_VERTS;        
+        }
+        
+        // if we have already received the vertex normals, we can calculate the face vertex normals and add them to the geode
+        if(m_vertexNormals->size()>0){            
+            myVertexNormals->push_back(m_vertexNormals->at(face[0]-1));
+            myVertexNormals->push_back(m_vertexNormals->at(face[1]-1));
+            myVertexNormals->push_back(m_vertexNormals->at(face[2]-1));
+            myVertexNormals->push_back(m_vertexNormals->at(face[3]-1));
+            m_recv = m_recv | RECV_VERTS_NORM;
+        }
+        
+        // if we have already received color
+        if(m_color->size()>0){        
+            myColors->push_back(m_color->at(face[0]-1));
+            myColors->push_back(m_color->at(face[1]-1));
+            myColors->push_back(m_color->at(face[2]-1));
+            myColors->push_back(m_color->at(face[3]-1));
+            m_recv = m_recv |RECV_COLOR;
+        }
+        
+        
+        
+        
+    } else if (osg::PrimitiveSet::TRIANGLES == m_type){
+        
+        // matlab indices from 1 to n
+        m_3faces->push_back(osg::Vec3i(static_cast<int>(face[0]-1), static_cast<int>(face[1]-1), static_cast<int>(face[2]-1)));
+        
+        // if we have already received the vertices, we can calculate the face vertices and add them to the geode
+        if(m_vertices->size()>0){
+            myVertices->push_back(m_vertices->at(face[0]-1));
+            myVertices->push_back(m_vertices->at(face[1]-1));
+            myVertices->push_back(m_vertices->at(face[2]-1));
+            m_recv = m_recv | RECV_VERTS;        
+        }
+        
+        // if we have already received the vertex normals, we can calculate the face vertex normals and add them to the geode
+        if(m_vertexNormals->size()>0){            
+            myVertexNormals->push_back(m_vertexNormals->at(face[0]-1));
+            myVertexNormals->push_back(m_vertexNormals->at(face[1]-1));
+            myVertexNormals->push_back(m_vertexNormals->at(face[2]-1));
+            m_recv = m_recv | RECV_VERTS_NORM;
+        }
+        
+        // if we have already received color
+        if(m_color->size()>0){        
+            myColors->push_back(m_color->at(face[0]-1));
+            myColors->push_back(m_color->at(face[1]-1));
+            myColors->push_back(m_color->at(face[2]-1));
+            m_recv = m_recv |RECV_COLOR;
+        }
     }
 }
 
@@ -78,7 +119,7 @@ void MatlabGeometry::setVertexNormal(const float vertexNormal[3]){
     
     if (osg::PrimitiveSet::POINTS == m_type){
         myVertexNormals->push_back(osg::Vec3f(vertexNormal[0] , vertexNormal[1], vertexNormal[2]));
-    }  else if (osg::PrimitiveSet::TRIANGLES == m_type){
+    }  else if (osg::PrimitiveSet::TRIANGLES == m_type ||  osg::PrimitiveSet::QUADS == m_type){
         m_vertexNormals->push_back(osg::Vec3f(vertexNormal[0] , vertexNormal[1], vertexNormal[2]));
     } 
 }
@@ -88,13 +129,18 @@ void MatlabGeometry::setFaceNormal(const float faceNormal[3]){
     myFaceNormals->push_back(osg::Vec3f(faceNormal[0], faceNormal[1], faceNormal[2]));
     myFaceNormals->push_back(osg::Vec3f(faceNormal[0], faceNormal[1], faceNormal[2]));
     myFaceNormals->push_back(osg::Vec3f(faceNormal[0], faceNormal[1], faceNormal[2]));
+    
+    if (osg::PrimitiveSet::QUADS == m_type){
+        myFaceNormals->push_back(osg::Vec3f(faceNormal[0], faceNormal[1], faceNormal[2]));  
+    }
+
 }
 
 void MatlabGeometry::setColor(const float color[4]){
     
     if(osg::PrimitiveSet::POINTS == m_type){   
         myColors->push_back(osg::Vec4f(color[0], color[1], color[2], color[3]));
-    } else if ( osg::PrimitiveSet::TRIANGLES == m_type){
+    } else if (osg::PrimitiveSet::TRIANGLES == m_type ||  osg::PrimitiveSet::QUADS == m_type){
         m_color->push_back(osg::Vec4f(color[0], color[1], color[2], color[3]));
     }
 }
@@ -104,6 +150,8 @@ void MatlabGeometry::setPrimitiveType(const std::string & type){
         m_type = osg::PrimitiveSet::POINTS;        
     } else if ( !TYPE_TRIANGLES.compare(type)){
         m_type = osg::PrimitiveSet::TRIANGLES;
+    } else if (!TYPE_QUADS.compare(type)){
+        m_type = osg::PrimitiveSet::QUADS;
     }
 }
 
@@ -115,48 +163,101 @@ void MatlabGeometry::setUpVector(const float upVector[3]){
     m_camUp = omicron::Vector3f( upVector[0], upVector[1], upVector[2] );
 }
 
-void MatlabGeometry::addValuesToGeode(){ 
+void MatlabGeometry::addValuesToGeode(){
     
-    if(m_faces->size()>0){
+    if(osg::PrimitiveSet::TRIANGLES == m_type){
         
-        if(m_vertices->size()>0){
+        if(m_3faces->size()>0){
             
-            if(!(m_recv & RECV_VERTS)){
+            if(m_vertices->size()>0){
                 
-                for(int i = 0; i < m_faces->size() ; i++){
-                    osg::Vec3i v = m_faces->at(i);   
-                    myVertices->push_back(m_vertices->at(v[0]));
-                    myVertices->push_back(m_vertices->at(v[1]));
-                    myVertices->push_back(m_vertices->at(v[2]));
+                if(!(m_recv & RECV_VERTS)){
+                    
+                    for(int i = 0; i < m_3faces->size() ; i++){
+                        osg::Vec3i v = m_3faces->at(i);   
+                        myVertices->push_back(m_vertices->at(v[0]));
+                        myVertices->push_back(m_vertices->at(v[1]));
+                        myVertices->push_back(m_vertices->at(v[2]));
+                    }
                 }
             }
-        }
-        
-        if(m_vertexNormals->size()>0){
             
-            if(!(m_recv & RECV_VERTS_NORM)){
-                for(int i = 0; i < m_faces->size(); i++){
-                    osg::Vec3i v = m_faces->at(i);   
-                    myVertexNormals->push_back(m_vertexNormals->at(v[0]));
-                    myVertexNormals->push_back(m_vertexNormals->at(v[1]));
-                    myVertexNormals->push_back(m_vertexNormals->at(v[2]));
+            if(m_vertexNormals->size()>0){
+                
+                if(!(m_recv & RECV_VERTS_NORM)){
+                    for(int i = 0; i < m_3faces->size(); i++){
+                        osg::Vec3i v = m_3faces->at(i);   
+                        myVertexNormals->push_back(m_vertexNormals->at(v[0]));
+                        myVertexNormals->push_back(m_vertexNormals->at(v[1]));
+                        myVertexNormals->push_back(m_vertexNormals->at(v[2]));
+                    }
                 }
             }
-        }
-        
-        if(m_color->size() > 0){
             
-            if(!(m_recv & RECV_COLOR)){
-                for(int i = 0; i < m_faces->size(); i++){
-                    osg::Vec3i v = m_faces->at(i);   
-                    myColors->push_back(m_color->at(v[0]));
-                    myColors->push_back(m_color->at(v[1]));
-                    myColors->push_back(m_color->at(v[2]));
+            if(m_color->size() > 0){
+                
+                if(!(m_recv & RECV_COLOR)){
+                    for(int i = 0; i < m_3faces->size(); i++){
+                        osg::Vec3i v = m_3faces->at(i);   
+                        myColors->push_back(m_color->at(v[0]));
+                        myColors->push_back(m_color->at(v[1]));
+                        myColors->push_back(m_color->at(v[2]));
+                    }
                 }
             }
+            
         }
-        
     }
+    
+    
+    
+    if(osg::PrimitiveSet::QUADS == m_type){
+        
+        if(m_4faces->size()>0){
+            
+            if(m_vertices->size()>0){
+                
+                if(!(m_recv & RECV_VERTS)){
+                    
+                    for(int i = 0; i < m_4faces->size() ; i++){
+                        osg::Vec4i v = m_4faces->at(i);   
+                        myVertices->push_back(m_vertices->at(v[0]));
+                        myVertices->push_back(m_vertices->at(v[1]));
+                        myVertices->push_back(m_vertices->at(v[2]));
+                        myVertices->push_back(m_vertices->at(v[3]));
+                    }
+                }
+            }
+            
+            if(m_vertexNormals->size()>0){
+                
+                if(!(m_recv & RECV_VERTS_NORM)){
+                    for(int i = 0; i < m_4faces->size(); i++){
+                        osg::Vec4i v = m_4faces->at(i);   
+                        myVertexNormals->push_back(m_vertexNormals->at(v[0]));
+                        myVertexNormals->push_back(m_vertexNormals->at(v[1]));
+                        myVertexNormals->push_back(m_vertexNormals->at(v[2]));
+                        myVertexNormals->push_back(m_vertexNormals->at(v[3]));
+                    }
+                }
+            }
+            
+            if(m_color->size() > 0){
+                
+                if(!(m_recv & RECV_COLOR)){
+                    for(int i = 0; i < m_4faces->size(); i++){
+                        osg::Vec4i v = m_4faces->at(i);   
+                        myColors->push_back(m_color->at(v[0]));
+                        myColors->push_back(m_color->at(v[1]));
+                        myColors->push_back(m_color->at(v[2]));
+                        myColors->push_back(m_color->at(v[3]));
+                    }
+                }
+            }
+            
+        }
+    }
+    
     
 }
 
@@ -198,7 +299,8 @@ void MatlabGeometry::addPrimitive() {
     
     myGeometry->dirtyBound();
     
-    m_faces->clear();   
+    m_3faces->clear();   
+    m_4faces->clear();
     m_vertices->clear();
     m_vertexNormals->clear();  
     m_color->clear();
@@ -222,7 +324,8 @@ void MatlabGeometry::clear() {
     
     
     m_color->clear();
-    m_faces->clear();
+    m_4faces->clear();
+    m_3faces->clear();
     m_vertices->clear();
     m_vertexNormals->clear();
     myFaceNormals->clear();

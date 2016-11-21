@@ -44,29 +44,24 @@ void DataReader::run(){
 void DataReader::readData(const std::string & data, const unsigned int & count){
     
     static unsigned int counter = 0;
-    float coordinates[3] = {0};  
-    float color[4] = {0};   
+    float coordinates[4] = {0};  
+    
+    parseData(data, coordinates);
     
     switch(m_type) {     
-        
         case VERTEX:
-            parseData(data, coordinates);
             m_matlabGeometry->setVertex(coordinates);
             break;
         case FACE:
-            parseData(data, coordinates);
             m_matlabGeometry->setFace(coordinates);
             break;
         case COLOR:
-            parseData(data, color);
-            m_matlabGeometry->setColor(color);
+            m_matlabGeometry->setColor(coordinates);
             break;
         case VERTEX_NORMAL:
-            parseData(data, coordinates);
             m_matlabGeometry->setVertexNormal(coordinates);
             break;
         case FACE_NORMAL:
-            parseData(data, coordinates);
             m_matlabGeometry->setFaceNormal(coordinates);
             break;
     }
