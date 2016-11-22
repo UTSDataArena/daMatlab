@@ -27,6 +27,6 @@ vertex_normals = vertexNormal(TR);
 %face_normal = faceNormal(TR);
 %face_normal = face_normal(:, idx);
 
-omgtea = Omegalib('teapot', 'TRIANGLES');
-omgtea.setNormals('VertexNormals', vertex_normals);
-omgtea.plotFigure(5, @trisurf, faces, vertices(:,1) ,vertices(:,2),vertices(:,3));
+omgtri = Omegalib('teapot', 'TRIANGLES');
+omgtri.setNormals('VertexNormals', vertex_normals);
+omgtri.plotFigure(2, @trisurf, faces, vertices(:,1) ,vertices(:,2),vertices(:,3));

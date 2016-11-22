@@ -1,3 +1,5 @@
+% MATLAB class to send the data of MATLAB graphics to Omegalib
+
 classdef Omegalib < handle
     
     properties
@@ -65,68 +67,58 @@ classdef Omegalib < handle
             [faces, vertices] = getValues(obj.m_fig);
             [face_normals, vertex_normals] = getNormalValues(obj.m_fig);
             
-            if size(obj.m_face_normals,1) > 0 
+            if size(obj.m_face_normals,1) > 0
                 face_normals = obj.m_face_normals;
             end
             
-            if size(obj.m_vertex_normals,1) > 0 
+            if size(obj.m_vertex_normals,1) > 0
                 vertex_normals = obj.m_vertex_normals;
             end
-          
+            
             [camPos, camUp] = getCameraValues(obj.m_fig);
             colors = getColorValues(obj.m_fig);
-
+            
             count_vertices= size(vertices, 1);
             count_faces= size(faces, 1);
             count_colors= size(colors, 1);
             count_face_normals = size(face_normals, 1);
             count_vertex_normals= size(vertex_normals, 1);
             
-            fwrite(obj.m_sock, strcat('H_MODEL_NAME:', obj.m_model_name), 'char'); % must be the first one
-            fwrite(obj.m_sock, strcat('H_TYPE:', obj.m_type),'char'); % must be the second one
+            fwrite(obj.m_sock, strcat('H_MODEL_NAME:', obj.m_model_name), 'char');
+            fwrite(obj.m_sock, strcat('H_TYPE:', obj.m_type),'char');
             fwrite(obj.m_sock, strcat('H_CAM_POS:', num2str(camPos)),'char');
             fwrite(obj.m_sock, strcat('H_CAM_UP:', num2str(camUp)),'char');
             
-            if count_vertices > 0
-                V = num2str(vertices);
-                fwrite(obj.m_sock, strcat('D_VERTEX:',  num2str(count_vertices)), 'char');
-                for k=1:count_vertices
-                    fwrite(obj.m_sock, V(k,:), 'char');
-                end
+            V = num2str(vertices);
+            fwrite(obj.m_sock, strcat('D_VERTEX:',  num2str(count_vertices)), 'char');
+            for k=1:count_vertices
+                fwrite(obj.m_sock, V(k,:), 'char');
             end
             
-            if count_vertex_normals > 0
-                F = num2str(vertex_normals);
-                fwrite(obj.m_sock, strcat('D_VERTEX_NORMAL:', num2str(count_vertex_normals)), 'char');
-                for k=1:count_vertex_normals
-                    fwrite(obj.m_sock, F(k,:), 'char');
-                end
+            F = num2str(vertex_normals);
+            fwrite(obj.m_sock, strcat('D_VERTEX_NORMAL:', num2str(count_vertex_normals)), 'char');
+            for k=1:count_vertex_normals
+                fwrite(obj.m_sock, F(k,:), 'char');
             end
             
-            if count_faces > 0
-                E = num2str(faces);
-                fwrite(obj.m_sock, strcat('D_FACE:', num2str(count_faces)), 'char');
-                for k=1:count_faces
-                    fwrite(obj.m_sock, E(k,:), 'char');
-                end
+            E = num2str(faces);
+            fwrite(obj.m_sock, strcat('D_FACE:', num2str(count_faces)), 'char');
+            for k=1:count_faces
+                fwrite(obj.m_sock, E(k,:), 'char');
             end
             
-            if count_colors > 0
-                C = num2str(colors);
-                fwrite(obj.m_sock, strcat('D_COLOR:', num2str(count_colors)), 'char');
-                for k=1:count_colors
-                    fwrite(obj.m_sock, C(k,:), 'char');
-                end
+            C = num2str(colors);
+            fwrite(obj.m_sock, strcat('D_COLOR:', num2str(count_colors)), 'char');
+            for k=1:count_colors
+                fwrite(obj.m_sock, C(k,:), 'char');
             end
             
-            if count_face_normals > 0
-                E = num2str(face_normals);
-                fwrite(obj.m_sock, strcat('D_FACE_NORMAL:', num2str(count_face_normals)), 'char');
-                for k=1:count_face_normals
-                    fwrite(obj.m_sock, E(k,:), 'char');
-                end
+            E = num2str(face_normals);
+            fwrite(obj.m_sock, strcat('D_FACE_NORMAL:', num2str(count_face_normals)), 'char');
+            for k=1:count_face_normals
+                fwrite(obj.m_sock, E(k,:), 'char');
             end
-            
+
             obj.close;
             
         end
