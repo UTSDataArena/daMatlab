@@ -44,25 +44,25 @@ void DataReader::run(){
 void DataReader::readData(const std::string & data, const unsigned int & count){
     
     static unsigned int counter = 0;
-    float coordinates[4] = {0};  
+    float coord[4] = {0};  
     
-    parseData(data, coordinates);
+    parseData(data, coord);
     
     switch(m_type) {     
         case VERTEX:
-            m_matlabGeometry->setVertex(coordinates);
+            m_matlabGeometry->setVertex(coord);
             break;
         case FACE:
-            m_matlabGeometry->setFace(coordinates);
+            m_matlabGeometry->setFace(coord);
             break;
         case COLOR:
-            m_matlabGeometry->setColor(coordinates);
+            m_matlabGeometry->setColor(coord);
             break;
         case VERTEX_NORMAL:
-            m_matlabGeometry->setVertexNormal(coordinates);
+            m_matlabGeometry->setVertexNormal(coord);
             break;
         case FACE_NORMAL:
-            m_matlabGeometry->setFaceNormal(coordinates);
+            m_matlabGeometry->setFaceNormal(coord);
             break;
     }
     
@@ -129,7 +129,7 @@ void DataReader::readHeader(const std::string & data, unsigned int & count){
         } else if(!Flags::H_ADD.compare(flag)){
             
             if(!m_matlabGeometry->validate()){ //geometry is invalid
-                std::cout << "DataReader: Geometry is invalid -- Please create new geometry" << std::endl; 
+                std::cout << "DataReader: Geometry is not valid -- Please create new geometry" << std::endl; 
                 m_matlabGeometry->clear();
             } else {
                 
@@ -147,7 +147,7 @@ void DataReader::readHeader(const std::string & data, unsigned int & count){
         } else if(!Flags::H_NEXT.compare(flag)){
             
             if(!m_matlabGeometry->validate()){ //geometry is invalid
-                std::cout << "DataReader: Geometry is invalid -- Please create new geometry" << std::endl; 
+                std::cout << "DataReader: Geometry is not valid -- Please create new geometry" << std::endl; 
                 m_matlabGeometry->clear();
             } else {
                 m_matlabGeometry->addPrimitive();
@@ -158,23 +158,23 @@ void DataReader::readHeader(const std::string & data, unsigned int & count){
         
     } else if (!flag.compare(0, data_flag.length(), data_flag)){
         
-        
         count = atof( value.c_str() );
         
-        
-        if(!Flags::D_VERTEX.compare(flag)){
-            m_type = VERTEX;
-        } else if (!Flags::D_FACE.compare(flag)){
-            m_type = FACE;
-        } else if (!Flags::D_COLOR.compare(flag)){
-            m_type = COLOR;
-        } else if (!Flags::D_VERTEX_NORMAL.compare(flag)){
-            m_type = VERTEX_NORMAL;
-        } else if (!Flags::D_FACE_NORMAL.compare(flag)){
-            m_type = FACE_NORMAL;
+        if(count > 0) {
+            if(!Flags::D_VERTEX.compare(flag)){
+                m_type = VERTEX;
+            } else if (!Flags::D_FACE.compare(flag)){
+                m_type = FACE;
+            } else if (!Flags::D_COLOR.compare(flag)){
+                m_type = COLOR;
+            } else if (!Flags::D_VERTEX_NORMAL.compare(flag)){
+                m_type = VERTEX_NORMAL;
+            } else if (!Flags::D_FACE_NORMAL.compare(flag)){
+                m_type = FACE_NORMAL;
+            }
+            m_state = DATA;
         }
         
-        m_state = DATA;
     }
     
     
@@ -204,17 +204,17 @@ void DataReader::receiveData(){
 }
 
 
-void DataReader::parseData(const std::string & data, float vector[]){
+void DataReader::parseData(const std::string & data, float coord[]){
     
     size_t i = data.find_first_not_of(" ", 0);
     size_t found = 0;                
     unsigned int pos = 0;
     while ( (found = data.find_first_of(" ", i)) != std::string::npos) { 
-        vector[pos] = atof( data.substr (i, (found-i)).c_str());
+        coord[pos] = atof( data.substr (i, (found-i)).c_str());
         found = data.find_first_not_of(" ", found);
         i = found;
         pos++;
     }
-    vector[pos] = atof( data.substr (i, (data.length()-i)).c_str());
+    coord[pos] = atof( data.substr (i, (data.length()-i)).c_str());
 }
 

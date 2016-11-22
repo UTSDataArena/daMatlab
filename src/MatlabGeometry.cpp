@@ -47,10 +47,10 @@ void MatlabGeometry::setVertex(const float vertex[3]){
 }
 
 void MatlabGeometry::setFace(const float face[]){   
+    
+    //std::cout << "MatlabGeometry: faces " << face[0] << " " << face[1] << " " << face[2] << " " << face[3] << std::endl;
 
     if (osg::PrimitiveSet::QUADS == m_type){
-        
-//         std::cout << "MatlabGeometry: faces " << face[0] << " " << face[1] << " " << face[2] << " " << face[3] << std::endl;
         
         m_4faces->push_back(osg::Vec4i(static_cast<int>(face[0]-1), static_cast<int>(face[1]-1), static_cast<int>(face[2]-1), static_cast<int>(face[3]-1)));
         
