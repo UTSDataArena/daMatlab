@@ -20,6 +20,6 @@ plotFigure(omgpt, 1, @pcshow, ptCloud );
 TR = triangulation(faces,vertices);
 vertex_normals = vertexNormal(TR);
 omgtri = Omegalib('teapot', 'TRIANGLES');
-setNormals(teaTri, 'VertexNormals', vertex_normals);
+setNormals(omgtri, 'VertexNormals', vertex_normals);
 %plotFigure(omgtri, 2, @trisurf, faces, vertices(:,1) ,vertices(:,2),vertices(:,3), 'FaceVertexCData', [1 0 0], 'EdgeAlpha', 'interp', 'FaceVertexAlphaData', bsxfun(@times, ones(size(vertices, 1), 1), 0.6));
 plotFigure(omgtri, 2, @trisurf, faces, vertices(:,1) ,vertices(:,2),vertices(:,3));
