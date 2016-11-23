@@ -172,22 +172,24 @@ elseif isa(graphics_obj, 'matlab.graphics.primitive.Patch')
     
 end
 
-    function mapping = getScaledMapping(index, map, limits)
+% https://au.mathworks.com/help/matlab/ref/caxis.html (More About)
+
+    function mapping = getScaledMapping(c_index, map, limits)
         cmin = limits(1);
         cmax = limits(2);
         m = size(map, 1);
-        index_val =  fix((index-cmin)/(cmax-cmin)*m)+1;
-        index_val(index_val<1) = 1;
-        index_val(index_val>m) = m;
-        mapping = map(index_val, :);
+        index =  fix((c_index-cmin)/(cmax-cmin)*m)+1;
+        index(index<1) = 1;
+        index(index>m) = m;
+        mapping = map(index, :);
     end
 
-    function mapping = getDirectMapping(index, map)
+    function mapping = getDirectMapping(c_index, map)
         m = size(map, 1);
-        index_val = fix(index);
-        index_val(index_val<1) = 1;
-        index_val(index_val>m) = m;
-        mapping = map(index_val, :);
+        index = fix(c_index);
+        index(index<1) = 1;
+        index(index>m) = m;
+        mapping = map(index, :);
     end
 
 
