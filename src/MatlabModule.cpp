@@ -136,9 +136,6 @@ void MatlabModule::initialize() {
 
 // void MatlabModule::update(const omega::UpdateContext& context){
 //     EngineModule::update(context);
-//     //         if(m_queue.size() > 0){
-//     //             addNewGeometry();
-//     //         }
 //     addNewGeometry();
 // }
 

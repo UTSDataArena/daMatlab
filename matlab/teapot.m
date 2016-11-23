@@ -10,23 +10,16 @@ path = 'external/gptoolbox-master/mesh/'; % path to the toolbox
 addpath(path);
 [vertices,faces] = readOBJ('teapot.obj');
 
-
 %%% POINT CLOUD %%%%%%
 ptCloud = pointCloud(vertices);
-
 omgpt = Omegalib('teapot', 'POINTS');
-omgpt.setNormals('VertexNormals', pcnormals(ptCloud));
-omgpt.plotFigure(1, @pcshow, ptCloud);
+setNormals(omgpt, 'VertexNormals', pcnormals(ptCloud));
+plotFigure(omgpt, 1, @pcshow, ptCloud );
 
 %%% TRIANGLES %%%%%%%%
-
 TR = triangulation(faces,vertices);
 vertex_normals = vertexNormal(TR);
-%idx = [1 3 2]; % change to counter clockwise
-%vertex_normals = vertex_normals(:, idx);
-%face_normal = faceNormal(TR);
-%face_normal = face_normal(:, idx);
-
 omgtri = Omegalib('teapot', 'TRIANGLES');
-omgtri.setNormals('VertexNormals', vertex_normals);
-omgtri.plotFigure(2, @trisurf, faces, vertices(:,1) ,vertices(:,2),vertices(:,3));
+setNormals(teaTri, 'VertexNormals', vertex_normals);
+%plotFigure(omgtri, 2, @trisurf, faces, vertices(:,1) ,vertices(:,2),vertices(:,3), 'FaceVertexCData', [1 0 0], 'EdgeAlpha', 'interp', 'FaceVertexAlphaData', bsxfun(@times, ones(size(vertices, 1), 1), 0.6));
+plotFigure(omgtri, 2, @trisurf, faces, vertices(:,1) ,vertices(:,2),vertices(:,3));
