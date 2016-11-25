@@ -1,6 +1,6 @@
-***********************************
-* OMEGALIB - daMatlab module ******
-***********************************
+--------------------------------
+OMEGALIB - daMatlab module
+--------------------------------
 
 Module to transfer MATLAB-based geometry into Omegalib. 
 
