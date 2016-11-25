@@ -64,7 +64,7 @@ private:
     /*Flag indicating if vertices, vertex normals, or vertex colors were received before faces (only for triangles) */
     enum RECV {RECV_DEF = 0x00, RECV_VERTS = 0x01, RECV_VERTS_NORM = 0x02, RECV_COLOR = 0x04} m_recv;
     
-    void addValuesToGeode();
+    bool validateAndAddValues();
     
     friend MatlabGeometry::RECV operator|(MatlabGeometry::RECV a, MatlabGeometry::RECV b);
     

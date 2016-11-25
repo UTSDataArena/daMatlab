@@ -70,11 +70,11 @@ classdef Omegalib < handle
             if size(obj.m_face_normals,1) > 0
                 face_normals = obj.m_face_normals;
             end
-            
+
             if size(obj.m_vertex_normals,1) > 0
                 vertex_normals = obj.m_vertex_normals;
             end
-            
+
             [camPos, camUp] = getCameraValues(obj.m_fig);
             colors = getColorValues(obj.m_fig);
             

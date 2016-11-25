@@ -49,7 +49,7 @@ void MatlabGeometry::setVertex(const float vertex[3]){
 void MatlabGeometry::setFace(const float face[]){   
     
     //std::cout << "MatlabGeometry: faces " << face[0] << " " << face[1] << " " << face[2] << " " << face[3] << std::endl;
-
+    
     if (osg::PrimitiveSet::QUADS == m_type){
         
         m_4faces->push_back(osg::Vec4i(static_cast<int>(face[0]-1), static_cast<int>(face[1]-1), static_cast<int>(face[2]-1), static_cast<int>(face[3]-1)));
@@ -133,7 +133,7 @@ void MatlabGeometry::setFaceNormal(const float faceNormal[3]){
     if (osg::PrimitiveSet::QUADS == m_type){
         myFaceNormals->push_back(osg::Vec3f(faceNormal[0], faceNormal[1], faceNormal[2]));  
     }
-
+    
 }
 
 void MatlabGeometry::setColor(const float color[4]){
@@ -163,16 +163,14 @@ void MatlabGeometry::setUpVector(const float upVector[3]){
     m_camUp = omicron::Vector3f( upVector[0], upVector[1], upVector[2] );
 }
 
-void MatlabGeometry::addValuesToGeode(){
+bool MatlabGeometry::validateAndAddValues(){
     
     if(osg::PrimitiveSet::TRIANGLES == m_type){
         
         if(m_3faces->size()>0){
             
             if(m_vertices->size()>0){
-                
                 if(!(m_recv & RECV_VERTS)){
-                    
                     for(int i = 0; i < m_3faces->size() ; i++){
                         osg::Vec3i v = m_3faces->at(i);   
                         myVertices->push_back(m_vertices->at(v[0]));
@@ -180,9 +178,15 @@ void MatlabGeometry::addValuesToGeode(){
                         myVertices->push_back(m_vertices->at(v[2]));
                     }
                 }
+            } else {
+                return false;
             }
             
             if(m_vertexNormals->size()>0){
+                
+                if (m_vertexNormals->size() != m_vertices->size() ){
+                    return false;
+                }
                 
                 if(!(m_recv & RECV_VERTS_NORM)){
                     for(int i = 0; i < m_3faces->size(); i++){
@@ -195,6 +199,10 @@ void MatlabGeometry::addValuesToGeode(){
             }
             
             if(m_color->size() > 0){
+
+                if(m_color->size() != m_vertices->size()){
+                    return false;
+                }
                 
                 if(!(m_recv & RECV_COLOR)){
                     for(int i = 0; i < m_3faces->size(); i++){
@@ -206,6 +214,8 @@ void MatlabGeometry::addValuesToGeode(){
                 }
             }
             
+        } else {
+            return false;
         }
     }
     
@@ -216,9 +226,7 @@ void MatlabGeometry::addValuesToGeode(){
         if(m_4faces->size()>0){
             
             if(m_vertices->size()>0){
-                
                 if(!(m_recv & RECV_VERTS)){
-                    
                     for(int i = 0; i < m_4faces->size() ; i++){
                         osg::Vec4i v = m_4faces->at(i);   
                         myVertices->push_back(m_vertices->at(v[0]));
@@ -227,9 +235,15 @@ void MatlabGeometry::addValuesToGeode(){
                         myVertices->push_back(m_vertices->at(v[3]));
                     }
                 }
+            } else {
+                return false;
             }
             
             if(m_vertexNormals->size()>0){
+                
+                if (m_vertexNormals->size() != m_vertices->size() ){
+                    return false;
+                }
                 
                 if(!(m_recv & RECV_VERTS_NORM)){
                     for(int i = 0; i < m_4faces->size(); i++){
@@ -244,6 +258,11 @@ void MatlabGeometry::addValuesToGeode(){
             
             if(m_color->size() > 0){
                 
+                if(m_color->size() != m_vertices->size()){
+                    return false;
+                }
+                
+                
                 if(!(m_recv & RECV_COLOR)){
                     for(int i = 0; i < m_4faces->size(); i++){
                         osg::Vec4i v = m_4faces->at(i);   
@@ -255,39 +274,19 @@ void MatlabGeometry::addValuesToGeode(){
                 }
             }
             
+        } else{
+            return false;
         }
     }
     
+    
+    return true;
     
 }
 
 
 bool MatlabGeometry::validate() {
-    
-    addValuesToGeode();
-    
-    if(myVertices->size() == 0) return false;
-    
-    if (myFaceNormals->size()>0){
-        if(myFaceNormals->size() != myVertices->size()){
-            return false;
-        }
-    }
-    
-    if (myVertexNormals->size()>0){
-        if(myVertexNormals->size() != myVertices->size()){
-            return false;
-        }
-    }
-    
-    if(myColors->size()>0){
-        if(myColors->size() != myVertices->size()){
-            return false;
-        }
-    }
-    
-    return true;
-    
+    return validateAndAddValues();    
 }
 
 
