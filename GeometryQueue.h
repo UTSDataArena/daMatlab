@@ -2,7 +2,6 @@
 #define GEOMETRY_QUEUE_H
 
 #include <pthread.h>
-#include <list>
 #include <iostream>
 #include "MatlabGeometry.h"
 
@@ -11,8 +10,7 @@
  *GeometryQueue only handles pointers to the MatlabGeometry objects.
  */
 
-class GeometryQueue
-{ 
+class GeometryQueue { 
     
     
 public:
@@ -24,12 +22,16 @@ public:
     MatlabGeometry * back();
     MatlabGeometry * pop();
     bool isEmpty();
-    void printt();
-   
+    
+    
 private:
-    static const unsigned int SIZE;
-    std::list< MatlabGeometry * > m_queue;
+    static const unsigned int MAX_SIZE;
+    std::queue< MatlabGeometry * > m_queue;
     pthread_mutex_t m_mutex;
 };
 
+
+
+
 #endif
+

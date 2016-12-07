@@ -1,8 +1,15 @@
+/******************************************************************************
+ * Based on http://stackoverflow.com/a/1151615 (Jeremy Friesner)
+ *****************************************************************************/
+
 #ifndef THREAD_H
 #define THREAD_H
 
 #include <pthread.h>
 
+/*
+ * We are using pthread since C++11 is not available
+ */
 namespace mThread {
     
     class Thread {
@@ -15,10 +22,10 @@ namespace mThread {
         bool cancel();
         
     protected:
-        virtual void run();
+        virtual void run() = 0;
         
     private:
-        static void * callRun(void * This);
+        static void * helper(void * this_ptr);
         pthread_t m_thread;
     };
 }

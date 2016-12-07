@@ -1,11 +1,15 @@
-#include "Thread.h"
+/******************************************************************************
+ * Based on http://stackoverflow.com/a/1151615 (Jeremy Friesner)
+ *****************************************************************************/
+
+#include "../Thread.h"
 
 mThread::Thread::Thread(){};
 
 mThread::Thread::~Thread(){};
 
 bool mThread::Thread::start() {
-    return (pthread_create(&m_thread, NULL, callRun, this) == 0);
+    return (pthread_create(&m_thread, NULL, helper, this) == 0);
 }
 
 bool mThread::Thread::join() {
@@ -18,7 +22,7 @@ bool mThread::Thread::cancel(){
 
 void mThread::Thread::run(){};
 
-void * mThread::Thread::callRun(void * This) {
-    ((Thread *)This)->run();
+void * mThread::Thread::helper(void * this_ptr) {
+    static_cast<Thread*>(this_ptr)->run();    
     return NULL;
 }

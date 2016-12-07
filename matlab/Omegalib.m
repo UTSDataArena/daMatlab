@@ -1,55 +1,56 @@
+% MATLAB class to send the data of MATLAB graphics to Omegalib
+
 classdef Omegalib < handle
     
     properties
-        
         m_model_name;
         m_type;
-        m_face;
-        m_color;
-        m_vertex_normal;
-        m_face_normal;
-        m_vertex;
-        
+        m_vertex_normals;
+        m_face_normals;
         m_port;
-        m_u; % udp socket
+        m_sock;
+        m_fig;
     end
     
     methods (Access = public)
         
         function obj = Omegalib(varargin)
-            if nargin == 0
+            
+            excep = MException('MATLAB:narginchk:notEnom_sockghInpm_sockts','Model name and m_type (POINTS or TRIANGLES) are reqm_sockired');
+            
+            if nargin < 2
+                throw excep
+            end
+            
+            obj.m_model_name = varargin{1};
+            obj.m_type = varargin{2};
+            
+            if nargin == 2
                 obj.m_port = 30000;
             else
-                obj.m_port = varargin{1};
+                obj.m_port = varargin{3};
             end
         end
         
-        function setValues(obj, model_name, type, vertex, varargin)
+        function setNormals(obj, varargin)
             nVarargs = length(varargin);
-            obj.m_vertex = vertex;
-            obj.m_model_name = model_name;
-            obj.m_type = type;
+            
             for i = 1:nVarargs-1
-                if strcmp('Face', varargin{i})
-                    obj.m_face = varargin{i+1};
+                if strcmp('FaceNormals', varargin{i})
+                    obj.m_face_normals = varargin{i+1};
                 end
-                if strcmp('Color', varargin{i})
-                    obj.m_color = varargin{i+1};
-                end
-                if strcmp('Face Normal', varargin{i})
-                    obj.m_face_normal = varargin{i+1};
-                end
-                if strcmp('Vertex Normal', varargin{i})
-                    obj.m_vertex_normal = varargin{i+1};
+                if strcmp('VertexNormals', varargin{i})
+                    obj.m_vertex_normals = varargin{i+1};
                 end
             end
+            
         end
         
         function plotFigure(obj, figIdx, func, varargin)
-            figure(figIdx)
-            func(varargin{:});
-            uicontrol('Style', 'pushbutton', 'String', 'Data', 'Position', [50 20 70 20],  'Callback', @obj.sendGeometry);
-            uicontrol('Style', 'pushbutton', 'String', 'Create/Check', 'Position', [150 20 70 20],  'Callback', @obj.createGeometry);
+            figure(figIdx);
+            obj.m_fig=func(varargin{:});
+            uicontrol('Style', 'pushbutton', 'String', 'Send Data', 'Position', [50 20 70 20],  'Callback', @obj.sendGeometry);
+            uicontrol('Style', 'pushbutton', 'String', 'Next', 'Position', [150 20 70 20],  'Callback', @obj.nextGeometry);
             uicontrol('Style', 'pushbutton', 'String', 'Add', 'Position', [250 20 70 20],  'Callback', @obj.addGeometry);
             uicontrol('Style', 'pushbutton', 'String', 'Clear', 'Position', [350 20 70 20],  'Callback', @obj.clearGeometry);
         end
@@ -63,92 +64,93 @@ classdef Omegalib < handle
             
             obj.init;
             
-            count_vertex= size(obj.m_vertex, 1);
-            count_face= size(obj.m_face, 1);
-            count_color= size(obj.m_color, 1);
-            count_face_normal = size(obj.m_face_normal, 1);
-            count_vertex_normal= size(obj.m_vertex_normal, 1);
+            [faces, vertices] = getValues(obj.m_fig);
+            [face_normals, vertex_normals] = getNormalValues(obj.m_fig);
             
-            fwrite(obj.m_u, strcat('H_MODEL_NAME:', obj.m_model_name), 'char'); % must be the first one
-            fwrite(obj.m_u, strcat('H_TYPE:', obj.m_type),'char'); % must be the second one
-            fwrite(obj.m_u, strcat('H_CAMPOS:', num2str(campos)),'char');
-            fwrite(obj.m_u, strcat('H_CAMUP:', num2str(camup)),'char');
+            if size(obj.m_face_normals,1) > 0
+                face_normals = obj.m_face_normals;
+            end
+
+            if size(obj.m_vertex_normals,1) > 0
+                vertex_normals = obj.m_vertex_normals;
+            end
+
+            [camPos, camUp] = getCameraValues(obj.m_fig);
+            colors = getColorValues(obj.m_fig);
             
-            if count_vertex > 0
-                V = num2str(obj.m_vertex);
-                fwrite(obj.m_u, strcat('D_VERTEX:',  num2str(count_vertex)), 'char');
-                for k=1:count_vertex
-                    fwrite(obj.m_u, V(k,:), 'char');
-                end
+            count_vertices= size(vertices, 1);
+            count_faces= size(faces, 1);
+            count_colors= size(colors, 1);
+            count_face_normals = size(face_normals, 1);
+            count_vertex_normals= size(vertex_normals, 1);
+            
+            fwrite(obj.m_sock, strcat('H_MODEL_NAME:', obj.m_model_name), 'char');
+            fwrite(obj.m_sock, strcat('H_TYPE:', obj.m_type),'char');
+            fwrite(obj.m_sock, strcat('H_CAM_POS:', num2str(camPos)),'char');
+            fwrite(obj.m_sock, strcat('H_CAM_UP:', num2str(camUp)),'char');
+            
+            V = num2str(vertices);
+            fwrite(obj.m_sock, strcat('D_VERTEX:',  num2str(count_vertices)), 'char');
+            for k=1:count_vertices
+                fwrite(obj.m_sock, V(k,:), 'char');
             end
             
-            if count_vertex_normal > 0
-                F = num2str(obj.m_vertex_normal);
-                fwrite(obj.m_u, strcat('D_VERTEX_NORMAL:', num2str(count_vertex_normal)), 'char');
-                for k=1:count_vertex_normal
-                    fwrite(obj.m_u, F(k,:), 'char');
-                end
+            F = num2str(vertex_normals);
+            fwrite(obj.m_sock, strcat('D_VERTEX_NORMAL:', num2str(count_vertex_normals)), 'char');
+            for k=1:count_vertex_normals
+                fwrite(obj.m_sock, F(k,:), 'char');
             end
             
-            if count_face > 0
-                E = num2str(obj.m_face);
-                fwrite(obj.m_u, strcat('D_FACE:', num2str(count_face)), 'char');
-                for k=1:count_face
-                    fwrite(obj.m_u, E(k,:), 'char');
-                end
+            E = num2str(faces);
+            fwrite(obj.m_sock, strcat('D_FACE:', num2str(count_faces)), 'char');
+            for k=1:count_faces
+                fwrite(obj.m_sock, E(k,:), 'char');
             end
             
-            
-            
-            
-            if count_face_normal > 0
-                E = num2str(obj.m_face_normal);
-                fwrite(obj.m_u, strcat('D_FACE_NORMAL:', num2str(count_face_normal)), 'char');
-                for k=1:count_face_normal
-                    fwrite(obj.m_u, E(k,:), 'char');
-                end
+            C = num2str(colors);
+            fwrite(obj.m_sock, strcat('D_COLOR:', num2str(count_colors)), 'char');
+            for k=1:count_colors
+                fwrite(obj.m_sock, C(k,:), 'char');
             end
             
-            if count_color > 0
-                C = num2str(obj.m_color);
-                fwrite(obj.m_u, strcat('D_COLOR:', num2str(count_color)), 'char');
-                for k=1:count_color
-                    fwrite(obj.m_u, C(k,:), 'char');
-                end
+            E = num2str(face_normals);
+            fwrite(obj.m_sock, strcat('D_FACE_NORMAL:', num2str(count_face_normals)), 'char');
+            for k=1:count_face_normals
+                fwrite(obj.m_sock, E(k,:), 'char');
             end
-            
+
             obj.close;
             
         end
         
         function clearGeometry(obj, source, event)
             obj.init;
-            fwrite(obj.m_u, 'H_CLEAR:', 'char');
+            fwrite(obj.m_sock, 'H_CLEAR:', 'char');
             obj.close;
         end
         
-        function createGeometry(obj, source, event)
+        function nextGeometry(obj, source, event)
             obj.init;
-            fwrite(obj.m_u, 'H_CREATE:', 'char');
+            fwrite(obj.m_sock, 'H_NEXT:', 'char');
             obj.close;
         end
         
         function addGeometry(obj, source, event)
             obj.init;
-            fwrite(obj.m_u, 'H_ADD:', 'char');
+            fwrite(obj.m_sock, 'H_ADD:', 'char');
             obj.close;
         end
         
         
         function init(obj)
-            obj.m_u=udp('127.0.0.1', obj.m_port);
-            fopen(obj.m_u);
+            obj.m_sock=udp('127.0.0.1', obj.m_port);
+            fopen(obj.m_sock);
         end
         
         function close(obj)
-            fclose(obj.m_u);
-            delete(obj.m_u);
-            clear obj.m_u;
+            fclose(obj.m_sock);
+            delete(obj.m_sock);
+            clear obj.m_sock;
         end
         
     end
