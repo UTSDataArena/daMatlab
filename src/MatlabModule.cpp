@@ -1,11 +1,41 @@
+/******************************************************************************
+ * THE OMEGA LIB PROJECT
+ *-----------------------------------------------------------------------------
+ * Copyright 2010-2015		Electronic Visualization Laboratory, 
+ *							University of Illinois at Chicago
+ * Authors:										
+ *  Alessandro Febretti		febret@gmail.com
+ *-----------------------------------------------------------------------------
+ * Copyright (c) 2010-2015, Electronic Visualization Laboratory,  
+ * University of Illinois at Chicago
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * Redistributions of source code must retain the above copyright notice, this 
+ * list of conditions and the following disclaimer. Redistributions in binary 
+ * form must reproduce the above copyright notice, this list of conditions and 
+ * the following disclaimer in the documentation and/or other materials 
+ * provided with the distribution. 
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO THE 
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * CONSEQUENTIAL  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ * SUBSTITUTE  GOODS OR  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * INTERRUPTION) HOWEVER  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT, STRICT LIABILITY,  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * POSSIBILITY OF SUCH DAMAGE.
+ *****************************************************************************/
+
 #include "../MatlabModule.h"
 
-
 MatlabModule::~MatlabModule() {
-    pthread_mutex_unlock(&m_mutex);
-    m_reader.join();
+    stopDataReader();
     pthread_mutex_destroy(&m_mutex);
-    cout << "MatlabModule: DataReader stopped " << endl;
 }
 
 MatlabModule* MatlabModule::createAndInitialize() {
@@ -19,7 +49,7 @@ MatlabModule::MatlabModule(): omega::EngineModule("MatlabModule"), m_sceneManage
 }
 
 
-void MatlabModule::printAllNodes(const omega::Node * node) {
+void MatlabModule::printSceneNodes(const omega::Node * node) {
     if(node == NULL){
         return;
     }
@@ -27,7 +57,7 @@ void MatlabModule::printAllNodes(const omega::Node * node) {
     for (std::list<omega::Node*>::iterator it=children.begin(); it != children.end(); ++it){
         std::cout << "MatlabModule: Node " << node->getName() << " has " << node->numChildren() << " child(ren)" << std::endl; 
         std::cout << "MatlabModule: Node's child: " << (*it)->getName() << std::endl;
-        printAllNodes(*it);
+        printSceneNodes(*it);
     }
 }
 
@@ -47,15 +77,19 @@ cyclops::SceneManager * MatlabModule::getSceneManager() const {
     return m_sceneManager.get();
 }
 
+void MatlabModule::stopDataReader(){
+    
+    if(!m_readerIsFin){
+        pthread_mutex_unlock(&m_mutex);
+        m_reader.join();
+        std::cout << "MatlabModule: DataReader stopped " << std::endl;
+        m_readerIsFin = true;
+    }
+}
+
 void MatlabModule::addNewGeometry() {
     
     static unsigned int round = 0; 
-    
-    //     if (m_round == 0){
-    //         m_programAsset = new cyclops::ProgramAsset();
-    //         m_programAsset->name = "MatlabModule";    
-    //         m_sceneManager->ShaderManager::addProgram(m_programAsset);           
-    //     }
     
     if( !m_queue.isEmpty()) {
         
@@ -77,33 +111,31 @@ void MatlabModule::addNewGeometry() {
         camera->setPosition(m_matlabGeometry->getCameraPos());
         camera->lookAt(m_staticObject->getBoundCenter(), m_matlabGeometry->getUpVector());   
         
-        printAllNodes(omega::Engine::instance()->getScene());
+        printSceneNodes(omega::Engine::instance()->getScene());
         std::cout << "-------------------------- MatlabModule: Done " << round << " --------------------------" << std::endl;
         round++;
     }
 }
 
 void MatlabModule::initialize() {
-    pthread_mutex_init(&m_mutex, NULL);
-    pthread_mutex_lock(&m_mutex);
-    m_sceneManager = cyclops::SceneManager::createAndInitialize();
     
+    m_port = 30000;
+    m_ip_address = "127.0.0.1";
+    
+    m_sceneManager = cyclops::SceneManager::createAndInitialize();
     m_queue = GeometryQueue();
     
-    // create Reader
-    m_reader = DataReader(&m_queue, &m_mutex);
-    //start reader thread
+    // create DataReader thread
+    pthread_mutex_init(&m_mutex, NULL);
+    pthread_mutex_lock(&m_mutex);
+    m_reader = DataReader(m_port, m_ip_address, &m_queue, &m_mutex);
+    m_readerIsFin = false;
     m_reader.start();
-    
-    //addNewGeometry();
 }
 
 
 // void MatlabModule::update(const omega::UpdateContext& context){
 //     EngineModule::update(context);
-//     //         if(m_queue.size() > 0){
-//     //             addNewGeometry();
-//     //         }
 //     addNewGeometry();
 // }
 

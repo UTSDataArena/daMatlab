@@ -14,35 +14,15 @@ class DataReader : public mThread::Thread {
     
 public:
     
-    DataReader();
-    DataReader(GeometryQueue * queue, pthread_mutex_t * mutex);
+    DataReader(); //don't use this
+    DataReader(const unsigned int port, const std::string & ip_address, GeometryQueue * queue, pthread_mutex_t * mutex);
     ~DataReader();
     void run();
-
+    
 private:
     
-    enum STATE {HEADER, DATA};
-    enum TYPE {VERTEX, FACE, COLOR, VERTEX_NORMAL, FACE_NORMAL};
-    
-    static const string H_MODEL_NAME;
-    static const string H_CAMPOS;
-    static const string H_CAMUP; 
-    static const string H_TYPE;
-    
-    static const string D_VERTEX;
-    static const string D_VERTEX_NORMAL;
-    static const string D_FACE_NORMAL;
-    static const string D_FACE;   
-    static const string D_COLOR;
-    
-    static const string H_NEXT; 
-    static const string H_CLEAR; 
-    static const string H_ADD; 
-    
-    void readData(const string & data, const unsigned int & count);
-    void readHeader(const string & data, unsigned int & count);    
-    void parseData(const string & data, float vector[]);
-    void receiveData();
+    enum STATE {HEADER, DATA} m_state;
+    enum TYPE {VERTEX, FACE, COLOR, VERTEX_NORMAL, FACE_NORMAL} m_type;
     
     pthread_mutex_t * m_mutex;
     
@@ -51,8 +31,30 @@ private:
     MatlabGeometry * m_matlabGeometry;
     
     bool m_create;
-    STATE m_state;
-    TYPE m_type;
+    
+    void readData(const std::string & data, const unsigned int & count);
+    void readHeader(const std::string & data, unsigned int & count);    
+    void parseData(const std::string & data, float vector[]);
+    void receiveData();
+    
+    struct Flags {
+        
+        static const std::string H_MODEL_NAME;
+        static const std::string H_CAM_POS;
+        static const std::string H_CAM_UP; 
+        static const std::string H_TYPE;
+        
+        static const std::string D_VERTEX;
+        static const std::string D_VERTEX_NORMAL;
+        static const std::string D_FACE_NORMAL;
+        static const std::string D_FACE;   
+        static const std::string D_COLOR;
+        
+        static const std::string H_NEXT; 
+        static const std::string H_CLEAR; 
+        static const std::string H_ADD;    
+        
+    };
     
 };
 
