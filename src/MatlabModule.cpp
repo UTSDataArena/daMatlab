@@ -77,6 +77,15 @@ cyclops::SceneManager * MatlabModule::getSceneManager() const {
     return m_sceneManager.get();
 }
 
+void MatlabModule::startDataReader(std::string ip_address, unsigned int port) {
+    pthread_mutex_init(&m_mutex, NULL);
+    pthread_mutex_lock(&m_mutex);
+    m_reader = DataReader(port, ip_address, &m_queue, &m_mutex);
+    m_readerIsFin = false;
+    m_reader.start();
+}
+
+
 void MatlabModule::stopDataReader(){
     
     if(!m_readerIsFin){
@@ -117,20 +126,9 @@ void MatlabModule::addNewGeometry() {
     }
 }
 
-void MatlabModule::initialize() {
-    
-    m_port = 30000;
-    m_ip_address = "127.0.0.1";
-    
+void MatlabModule::initialize() {    
     m_sceneManager = cyclops::SceneManager::createAndInitialize();
     m_queue = GeometryQueue();
-    
-    // create DataReader thread
-    pthread_mutex_init(&m_mutex, NULL);
-    pthread_mutex_lock(&m_mutex);
-    m_reader = DataReader(m_port, m_ip_address, &m_queue, &m_mutex);
-    m_readerIsFin = false;
-    m_reader.start();
 }
 
 

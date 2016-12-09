@@ -56,8 +56,9 @@ public:
     omega::Node * getCurrentNode() const;
     cyclops::StaticObject * getStaticObject() const;
     cyclops::SceneManager * getSceneManager() const;
-    void addNewGeometry();
+    void startDataReader(std::string ip_address, unsigned int port);
     void stopDataReader();
+    void addNewGeometry();
     
     
 private:
@@ -71,9 +72,6 @@ private:
     pthread_mutex_t m_mutex;
     bool m_readerIsFin;
     
-    unsigned int m_port;
-    std::string m_ip_address;
-    
     void printSceneNodes(const omega::Node * node);
 };
 
@@ -85,6 +83,7 @@ BOOST_PYTHON_MODULE(daMatlab)
 {
     PYAPI_REF_BASE_CLASS(MatlabModule)
     PYAPI_STATIC_REF_GETTER(MatlabModule, createAndInitialize)
+    PYAPI_METHOD(MatlabModule, startDataReader)
     PYAPI_METHOD(MatlabModule, stopDataReader)
     PYAPI_METHOD(MatlabModule, addNewGeometry)
     PYAPI_REF_GETTER(MatlabModule, getCurrentNode)
